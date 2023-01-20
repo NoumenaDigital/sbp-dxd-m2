@@ -209,7 +209,7 @@ pub(crate) fn get_uref(name: &str, missing: DidCoreError, invalid: DidCoreError)
         .unwrap_or_revert_with(DidCoreError::UnexpectedKeyVariant)
 }
 
-// check ig uref exists for given name
+// check if uref exists for given name
 pub(crate) fn named_uref_exists(name: &str) -> bool {
     let (name_ptr, name_size, _bytes) = to_ptr(name);
     let mut key_bytes = vec![0u8; Key::max_serialized_length()];
