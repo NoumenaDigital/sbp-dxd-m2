@@ -27,10 +27,13 @@ pub(crate) fn enforce_only_identity_owner_can_invoke(identity: Key) {
     }
 }
 
+// used to change the owner by updating the 'owners' dictionary
 pub(crate) fn change_owner_internal(identity: &str, new_owner: Key) {
     upsert_dictionary_value_from_key(OWNERS, identity, new_owner)
 }
 
+// used to get the owner of identity by checking the 'owners' dictionary.
+// If there is no entry for that identity, it means the owner is not changed, so the current owner is its own identity
 pub(crate) fn get_identity_owner(identity: Key) -> Key {
     match get_dictionary_value_from_key::<Key>(OWNERS, &key_to_str(&identity)) {
         Some(owner) => owner,
@@ -38,7 +41,8 @@ pub(crate) fn get_identity_owner(identity: Key) -> Key {
     }
 }
 
-// used to store delegate data. Delegate has a type. Each identity can have multiple types. Each type can have multiple delegates.
+// used to store delegate data. Delegate has a type. Each identity can have multiple types
+// Each type can have multiple delegates.
 pub(crate) fn add_delegate_internal(
     identity: String,
     delegate_type: String,
@@ -88,7 +92,11 @@ pub(crate) fn revoke_delegate_internal(identity: String, delegate_type: String, 
 }
 
 // used to store attributes. One identity can have multiple attributes. The attribute is represented as a key/value par
-pub(crate) fn set_attribute_internal(identity: String, attribute_name: String, attribute_value: String) {
+pub(crate) fn set_attribute_internal(
+    identity: String,
+    attribute_name: String,
+    attribute_value: String,
+) {
     let mut attributes_for_identity =
         get_dictionary_value_from_key::<BTreeMap<String, String>>(ATTRIBUTES, &identity)
             .unwrap_or_default();
@@ -96,7 +104,7 @@ pub(crate) fn set_attribute_internal(identity: String, attribute_name: String, a
     upsert_dictionary_value_from_key(ATTRIBUTES, &identity, attributes_for_identity);
 }
 
-// used to revoke attribute,  revert if attribute (for specific identity) doesn't exist
+// used to revoke attribute, revert if attribute (for specific identity) doesn't exist
 pub(crate) fn revoke_attribute_internal(identity: String, attribute_name: String) {
     let mut attributes_for_identity =
         get_dictionary_value_from_key::<BTreeMap<String, String>>(ATTRIBUTES, &identity)
@@ -111,6 +119,7 @@ pub(crate) fn revoke_attribute_internal(identity: String, attribute_name: String
     }
 }
 
+// used to add/update dictionary items
 pub(crate) fn upsert_dictionary_value_from_key<T: CLTyped + FromBytes + ToBytes>(
     dictionary_name: &str,
     key: &str,
@@ -124,6 +133,7 @@ pub(crate) fn upsert_dictionary_value_from_key<T: CLTyped + FromBytes + ToBytes>
     storage::dictionary_put(seed_uref, key, Some(value));
 }
 
+// used to get value from dictionary for given key
 pub(crate) fn get_dictionary_value_from_key<T: CLTyped + FromBytes>(
     dictionary_name: &str,
     key: &str,
@@ -143,22 +153,7 @@ pub(crate) fn get_dictionary_value_from_key<T: CLTyped + FromBytes>(
     }
 }
 
-pub(crate) fn get_named_arg_size(name: &str) -> Option<usize> {
-    let mut arg_size: usize = 0;
-    let ret = unsafe {
-        ext_ffi::casper_get_named_arg_size(
-            name.as_bytes().as_ptr(),
-            name.len(),
-            &mut arg_size as *mut usize,
-        )
-    };
-    match api_error::result_from(ret) {
-        Ok(_) => Some(arg_size),
-        Err(ApiError::MissingArgument) => None,
-        Err(e) => revert(e),
-    }
-}
-
+// used to safely parse input parameter from an entry point. If parameter is missing or invalid, revert with appropriate error
 pub(crate) fn get_named_arg_with_user_errors<T: FromBytes>(
     name: &str,
     missing: DidCoreError,
@@ -190,12 +185,31 @@ pub(crate) fn get_named_arg_with_user_errors<T: FromBytes>(
     bytesrepr::deserialize(arg_bytes).map_err(|_| invalid)
 }
 
+// returns a size in bytes of given argument
+fn get_named_arg_size(name: &str) -> Option<usize> {
+    let mut arg_size: usize = 0;
+    let ret = unsafe {
+        ext_ffi::casper_get_named_arg_size(
+            name.as_bytes().as_ptr(),
+            name.len(),
+            &mut arg_size as *mut usize,
+        )
+    };
+    match api_error::result_from(ret) {
+        Ok(_) => Some(arg_size),
+        Err(ApiError::MissingArgument) => None,
+        Err(e) => revert(e),
+    }
+}
+
+// returns uref for given name or revert if key doesn't exist
 pub(crate) fn get_uref(name: &str, missing: DidCoreError, invalid: DidCoreError) -> URef {
     let key = get_key_with_user_errors(name, missing, invalid);
     key.into_uref()
         .unwrap_or_revert_with(DidCoreError::UnexpectedKeyVariant)
 }
 
+// check if uref exists for given name
 pub(crate) fn named_uref_exists(name: &str) -> bool {
     let (name_ptr, name_size, _bytes) = to_ptr(name);
     let mut key_bytes = vec![0u8; Key::max_serialized_length()];
@@ -213,6 +227,7 @@ pub(crate) fn named_uref_exists(name: &str) -> bool {
     api_error::result_from(ret).is_ok()
 }
 
+// returns key for given name or revert if key doesn't exist
 pub(crate) fn get_key_with_user_errors(
     name: &str,
     missing: DidCoreError,
@@ -239,7 +254,7 @@ pub(crate) fn get_key_with_user_errors(
 
     bytesrepr::deserialize(key_bytes).unwrap_or_revert_with(invalid)
 }
-
+// Returns a raw pointer, size and bytes for a given type parameter
 pub(crate) fn to_ptr<T: ToBytes>(t: T) -> (*const u8, usize, Vec<u8>) {
     let bytes = t.into_bytes().unwrap_or_revert();
     let ptr = bytes.as_ptr();
@@ -247,6 +262,7 @@ pub(crate) fn to_ptr<T: ToBytes>(t: T) -> (*const u8, usize, Vec<u8>) {
     (ptr, size, bytes)
 }
 
+// return string for given Key, revert if Key variant is not Account
 pub fn key_to_str(key: &Key) -> String {
     match key {
         Key::Account(account) => account.to_string(),

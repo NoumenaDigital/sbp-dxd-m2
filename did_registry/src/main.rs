@@ -4,11 +4,7 @@
 
 extern crate alloc;
 
-use alloc::{
-    format,
-    string::String,
-    vec,
-};
+use alloc::{format, string::String, vec};
 
 use casper_contract::{
     contract_api::{
@@ -18,20 +14,21 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{
-    CLType, EntryPoint, EntryPointAccess, EntryPoints, EntryPointType, Key, Parameter,
-    runtime_args, RuntimeArgs
+    runtime_args, CLType, EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, Key,
+    Parameter, RuntimeArgs,
 };
 
 use common::constants::*;
-use utils::*;
 use error::DidCoreError;
+use utils::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 compile_error!("target arch should be wasm32: compile with '--target wasm32-unknown-unknown'");
 
-mod utils;
 pub mod error;
+mod utils;
 
+// change the owner of the identity
 #[no_mangle]
 pub extern "C" fn change_owner() {
     let identity = get_named_arg_with_user_errors::<Key>(
@@ -53,6 +50,7 @@ pub extern "C" fn change_owner() {
     change_owner_internal(&key_to_str(&identity), new_owner)
 }
 
+// add delegate to the identity
 #[no_mangle]
 pub extern "C" fn add_delegate() {
     let identity = get_named_arg_with_user_errors::<Key>(
@@ -92,6 +90,7 @@ pub extern "C" fn add_delegate() {
     );
 }
 
+// revoke delegate for identity
 #[no_mangle]
 pub extern "C" fn revoke_delegate() {
     let identity = get_named_arg_with_user_errors::<Key>(
@@ -116,13 +115,10 @@ pub extern "C" fn revoke_delegate() {
     .unwrap_or_revert();
 
     enforce_only_identity_owner_can_invoke(identity);
-    revoke_delegate_internal(
-        key_to_str(&identity),
-        delegate_type,
-        key_to_str(&delegate),
-    )
+    revoke_delegate_internal(key_to_str(&identity), delegate_type, key_to_str(&delegate))
 }
 
+// set attribute for identity
 #[no_mangle]
 pub extern "C" fn set_attribute() {
     let identity = get_named_arg_with_user_errors::<Key>(
@@ -147,13 +143,10 @@ pub extern "C" fn set_attribute() {
     .unwrap_or_revert();
 
     enforce_only_identity_owner_can_invoke(identity);
-    set_attribute_internal(
-        key_to_str(&identity),
-        attribute_name,
-        attribute_value,
-    );
+    set_attribute_internal(key_to_str(&identity), attribute_name, attribute_value);
 }
 
+//revoke attribute for identity
 #[no_mangle]
 pub extern "C" fn revoke_attribute() {
     let identity = get_named_arg_with_user_errors::<Key>(
@@ -174,6 +167,7 @@ pub extern "C" fn revoke_attribute() {
     revoke_attribute_internal(key_to_str(&identity), attribute_name);
 }
 
+// initialize data for the contract, revert if did with the same name already exists
 #[no_mangle]
 pub extern "C" fn init() {
     // We only allow the init() entrypoint to be called once.
@@ -235,6 +229,7 @@ pub extern "C" fn call() {
     );
 }
 
+// return entry points needed for the contract
 fn build_entry_points() -> EntryPoints {
     let mut entry_points = EntryPoints::new();
 

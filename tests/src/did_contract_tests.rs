@@ -83,7 +83,7 @@ fn test_add_delegate_by_owner_successful() {
 }
 
 #[test]
-fn test_add_delegate_for_existing_identity_successful(){
+fn test_add_delegate_for_existing_identity_successful() {
     let (env, contract, deployer_account) = deploy();
     let identity = Key::Account(deployer_account);
     let delegate = Key::Account(env.next_user());
@@ -107,13 +107,16 @@ fn test_add_delegate_for_existing_identity_successful(){
         new_delegate,
         validity,
     );
-    let delegate_option =
-        contract.get_delegate(key_to_str(&identity), new_delegate_type, key_to_str(&new_delegate));
+    let delegate_option = contract.get_delegate(
+        key_to_str(&identity),
+        new_delegate_type,
+        key_to_str(&new_delegate),
+    );
     assert!(delegate_option.is_some());
 }
 
 #[test]
-fn test_add_delegate_for_existing_delegate_type_successful(){
+fn test_add_delegate_for_existing_delegate_type_successful() {
     let (env, contract, deployer_account) = deploy();
     let identity = Key::Account(deployer_account);
     let delegate = Key::Account(env.next_user());
@@ -136,13 +139,16 @@ fn test_add_delegate_for_existing_delegate_type_successful(){
         new_delegate,
         validity,
     );
-    let delegate_option =
-        contract.get_delegate(key_to_str(&identity), delegate_type, key_to_str(&new_delegate));
+    let delegate_option = contract.get_delegate(
+        key_to_str(&identity),
+        delegate_type,
+        key_to_str(&new_delegate),
+    );
     assert!(delegate_option.is_some());
 }
 
 #[test]
-fn test_add_delegate_update_existing_delegate_successful(){
+fn test_add_delegate_update_existing_delegate_successful() {
     let (env, contract, deployer_account) = deploy();
     let identity = Key::Account(deployer_account);
     let delegate = Key::Account(env.next_user());
@@ -285,7 +291,7 @@ fn test_set_attribute_by_owner_successful() {
 }
 
 #[test]
-fn test_set_attribute_for_existing_identity_successful(){
+fn test_set_attribute_for_existing_identity_successful() {
     let (_env, contract, deployer_account) = deploy();
     let identity = Key::Account(deployer_account);
     let attribute_name = "Attribute_name".to_string();
@@ -318,7 +324,7 @@ fn test_set_attribute_for_existing_identity_successful(){
 }
 
 #[test]
-fn test_set_attribute_update_existing_attribute_successful(){
+fn test_set_attribute_update_existing_attribute_successful() {
     let (_env, contract, deployer_account) = deploy();
     let identity = Key::Account(deployer_account);
     let attribute_name = "Attribute_name".to_string();
@@ -353,12 +359,7 @@ fn test_set_attribute_by_non_owner_rejected() {
     let attribute_value = "Attribute_value".to_string();
     let non_owner = env.next_user();
 
-    contract.set_attribute(
-        non_owner,
-        identity,
-        &attribute_name,
-        &attribute_value,
-    );
+    contract.set_attribute(non_owner, identity, &attribute_name, &attribute_value);
 }
 
 #[test]
