@@ -99,7 +99,7 @@ So, steps 2,3 and 4 below need done 2 times. There should be 2 accounts:
 | identity_2 | <ACCOUNT_HASH_2>       | \<PATH_TO_ACCOUNT_SECRET_KEY_2\>.pem |
 
 ##### Account Setup
-1. Install casper-client: https://docs.casperlabs.io/workflow/setup/#the-casper-command-line-client
+1. Install casper-client: https://docs.casperlabs.io/dapp-dev-guide/quickstart
 2. Create keys: https://docs.casperlabs.io/dapp-dev-guide/keys/#option-1-key-generation-using-the-casper-client (if `tree ed25519-keys/` doesn't work use `ls ed25519-keys/`)
 3. Get Casper Signer: https://chrome.google.com/webstore/detail/casper-signer/djhndpllfiibmcdbnmaaahkhchcoijce and use the keys from “2.” to create account.
 4. Go to https://testnet.cspr.live and then to Tools/Faucet in order to get some CSPR.
