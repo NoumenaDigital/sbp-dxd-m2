@@ -2,7 +2,7 @@ name: ON PUSH
 on: [push]
 
 env:
-  GITHUB_USER_PASS: ${{ secrets.MAVEN_PASSWORD }}
+  GITHUB_USER_PASS: ${{ secrets.GH_PASSWORD }}
   GITHUB_USER_NAME: ${{ secrets.GH_USERNAME }}
 jobs:
   build-and-test:
@@ -14,7 +14,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ secrets.GH_USERNAME }}
-          password: ${{ secrets.MAVEN_PASSWORD }}
+          password: ${{ secrets.GH_PASSWORD }}
       - name: Prepare
         run: make -e prepare
       - name: Build and test
